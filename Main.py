@@ -35,16 +35,36 @@ def download_xml(type):
     return str_into_xml
 
 
+def get_user_hero_id(account_id):
+    """
+    This functions returns a list containing the ID that the give account_id user, has played.
+    It fills up after completing all for loops, otherwise it will only remember the first input hero_id
+    """
+    # MAGIC
+    steam_xml_file = download_xml(2)
+    #   steam_xml_parser = et.parse("mylog.xml")
+    steam_xml_root = steam_xml_file
+    steam_xml_matches = steam_xml_root.find('matches')
+    user_match_data_list = []
+
+    for match in steam_xml_matches:
+        for match_info in match:
+            for player in match_info:
+                if player.find("account_id").text == account_id:
+                    user_match_data_list.append(player.find('hero_id').text)
+    return user_match_data_list
+
+
 def get_hero_information(hero_id):
     """
-
-            :String: return the hero which is equal to the hero_id in xml
-            """
+    This function returns the hero in text. It is compared to the hero_id given by the list, user_match_data_list.
+    From the function get_user_id()
+    """
     # MAGIC
-    # steam_xml_file = download_xml(1)
-    steam_xml_parser = et.parse("herolog.xml")
+    steam_xml_file = download_xml(1)
+    #   steam_xml_parser = et.parse("herolog.xml")
 
-    steam_hero_root = steam_xml_parser.getroot()
+    steam_hero_root = steam_xml_file
     steam_heroes_root = steam_hero_root.find('heroes')
 
     hero_list = []
@@ -60,11 +80,15 @@ def get_hero_information(hero_id):
 
 
 def get_match_data():
+    """
+    This function returns the match_id and time in timestamp.
+    Converting of timestamp happens when outputting.
+    """
     # MAGIC
-    # steam_xml_file = download_xml(2)
-    steam_xml_parser = et.parse("mylog.xml")
+    steam_xml_file = download_xml(2)
+    #   steam_xml_parser = et.parse("mylog.xml")
 
-    steam_xml_root = steam_xml_parser.getroot()
+    steam_xml_root = steam_xml_file
     steam_xml_matches = steam_xml_root.find('matches')
     match_data_list = []
 
@@ -76,23 +100,10 @@ def get_match_data():
     return match_data_list
 
 
-def get_user_hero_id(account_id):
-    # MAGIC
-    # steam_xml_file = download_xml(2)
-    steam_xml_parser = et.parse("mylog.xml")
-    steam_xml_root = steam_xml_parser.getroot()
-    steam_xml_matches = steam_xml_root.find('matches')
-    user_match_data_list = []
-
-    for match in steam_xml_matches:
-        for match_info in match:
-            for player in match_info:
-                if player.find("account_id").text == account_id:
-                    user_match_data_list.append(player.find('hero_id').text)
-    return user_match_data_list
-
-
 def display_information(account_id):
+    """
+    This function is used to merely display data.
+    """
     i = 0
     while i < 10:
         user_match_data_list = get_user_hero_id("19838652")
