@@ -10,7 +10,7 @@ def download_xml(type):
         Remember to change the account id.
         """
     steam_key = "22FC2DC99B506FC251EB44AFBB83EB7F"
-    account_id = "16667612"
+    account_id = "19838652"
     chosen_url = ""
 
     web_data = url.urlopen("http://api.steampowered.com/IEconDOTA2_570/GetHeroes/v1/"
@@ -41,10 +41,10 @@ def get_hero_information(hero_id):
             :String: return the hero which is equal to the hero_id in xml
             """
     # MAGIC
-    steam_xml_file = download_xml(1)
-    # steam_xml_parser = et.parse("herolog.xml")
+    # steam_xml_file = download_xml(1)
+    steam_xml_parser = et.parse("herolog.xml")
 
-    steam_hero_root = steam_xml_file
+    steam_hero_root = steam_xml_parser.getroot()
     steam_heroes_root = steam_hero_root.find('heroes')
 
     hero_list = []
@@ -61,10 +61,10 @@ def get_hero_information(hero_id):
 
 def get_match_data():
     # MAGIC
-    steam_xml_file = download_xml(2)
-    # steam_xml_parser = et.parse("mylog.xml")
+    # steam_xml_file = download_xml(2)
+    steam_xml_parser = et.parse("mylog.xml")
 
-    steam_xml_root = steam_xml_file
+    steam_xml_root = steam_xml_parser.getroot()
     steam_xml_matches = steam_xml_root.find('matches')
     match_data_list = []
 
@@ -76,12 +76,11 @@ def get_match_data():
     return match_data_list
 
 
-def get_user_history(account_id):
+def get_user_hero_id(account_id):
     # MAGIC
-    steam_xml_file = download_xml(2)
-    #   steam_xml_parser = et.parse("mylog.xml")
-    i = 0
-    steam_xml_root = steam_xml_file
+    # steam_xml_file = download_xml(2)
+    steam_xml_parser = et.parse("mylog.xml")
+    steam_xml_root = steam_xml_parser.getroot()
     steam_xml_matches = steam_xml_root.find('matches')
     user_match_data_list = []
 
@@ -90,19 +89,25 @@ def get_user_history(account_id):
             for player in match_info:
                 if player.find("account_id").text == account_id:
                     user_match_data_list.append(player.find('hero_id').text)
+    return user_match_data_list
 
-    for info in user_match_data_list:
-        print("ACCOUNT_ID INFORMATION: " + account_id)
-        match_data = get_match_data()
-        print("MATCH ID: " + match_data[i] +
-              "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
-              "\nMATCH HERO: " + get_hero_information(str(info).upper()) + "\n")
-        i += 2
-        # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
-        if i is 4:
-            break
 
-get_user_history("16667612")
+def display_information(account_id):
+    i = 0
+    while i < 10:
+        user_match_data_list = get_user_hero_id("19838652")
+        for info in user_match_data_list:
+            match_data = get_match_data()
+            chosen_hero = get_hero_information(str(info))
+            print("ACCOUNT_ID INFORMATION: " + account_id)
+            print("MATCH ID: " + match_data[i] +
+                  "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
+                  "\nMATCH HERO: " + str(chosen_hero).upper() + "\n")
+            i += 2
+            # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
+
+
+display_information("19838652")
 
 
 
