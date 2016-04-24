@@ -5,10 +5,9 @@ import datetime
 
 def download_xml(type):
     """
-
-        :XML File: root of hero information xml
-        Remember to change the account id.
-        """
+    This functions is used to download the xml files, which we recieve as text and then convert into xml again.
+    This function hence returns a xml root file.
+    """
     steam_key = "22FC2DC99B506FC251EB44AFBB83EB7F"
     account_id = "19838652"
     chosen_url = ""
