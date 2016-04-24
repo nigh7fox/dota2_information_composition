@@ -104,17 +104,19 @@ def display_information(account_id):
     This function is used to merely display data.
     """
     i = 0
-    while i < 10:
-        user_match_data_list = get_user_hero_id("19838652")
-        for info in user_match_data_list:
-            match_data = get_match_data()
-            chosen_hero = get_hero_information(str(info))
-            print("ACCOUNT_ID INFORMATION: " + account_id)
-            print("MATCH ID: " + match_data[i] +
-                  "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
-                  "\nMATCH HERO: " + str(chosen_hero).upper() + "\n")
-            i += 2
-            # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
+    user_match_data_list = get_user_hero_id("19838652")
+    for info in user_match_data_list:
+        match_data = get_match_data()
+        chosen_hero = get_hero_information(str(info))
+        print("ACCOUNT_ID INFORMATION: " + account_id)
+        print("MATCH ID: " + match_data[i] +
+              "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
+              "\nMATCH HERO: " + str(chosen_hero).upper() + "\n")
+        i += 2
+        # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
+        if i is 10:
+            break
+            
 
 
 display_information("19838652")
