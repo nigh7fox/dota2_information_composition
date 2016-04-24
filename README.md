@@ -1,2 +1,4 @@
 # dota2_information_composition
-Download all available dota2 information from Steam's WebAPI.
+Small project, attempting to gather as much available data from valve for the game dota2
+
+Wish me luck!
