@@ -4,6 +4,8 @@ This is dota2. All dota2 related functions are in here.
 import datetime
 from Download import download_xml as download_xml
 import xml.etree.ElementTree as et
+import time
+import urllib.request as url
 
 
 def get_user_match_items(match_id, account_id):
@@ -29,7 +31,7 @@ def get_item_name(item_id):
     """
     This function returns the chosen item name -> compares it with item_id
     """
-    steam_xml_file = et.parse("item_info")
+    steam_xml_file = et.parse("item_info.xml")
     steam_xml_root = steam_xml_file.getroot()
     for items in steam_xml_root:
         for item in items:
@@ -180,18 +182,21 @@ def display_dota2_news(account_id):
     This function output's the news using the get_dota2_news list.
     This is function is optional.
     """
-    case_positive = "This user is on a winning streak he's won " + get_wins(account_id) + " out of 10 games."
-    case_negative = "This user is on a losing streak he's won " + get_wins(account_id) + " out of 10 games."
 
-    if get_wins(account_id) > 5:
+    wins_amount = get_wins(account_id)
+    wins_total = 10
+    case_positive = "This user is on a winning streak he's won " + str(wins_amount) + " out of 10 games."
+    case_negative = "This user is on a losing streak he's won " + str(wins_amount) + " out of 10 games."
+
+    if wins_amount > (wins_total/2):
         case = case_positive
     else:
         case = case_negative
 
     print(case)
     print("Also.. Here's some dota2 news!\n")
-
-    for news in get_dota2_news():
+    dota_news_list = get_dota2_news()
+    for news in dota_news_list:
         print(news)
 
 
@@ -201,18 +206,39 @@ def display_information(account_id):
     """
     i = 0
     user_match_data_list = get_user_hero_id("19838652")
+    match_data = get_match_data()
+    match_result = get_match_result(match_data[i], account_id)
     for info in user_match_data_list:
-        match_data = get_match_data()
+        match_result = get_match_result(match_data[i], account_id)
         chosen_hero = get_hero_information(str(info))
         print("ACCOUNT_ID INFORMATION: " + account_id)
         print("MATCH ID: " + match_data[i] +
               "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
               "\nMATCH HERO: " + str(chosen_hero).upper())
-        print(get_match_result(match_data[i], account_id) + "\n")
+        print(match_result + "\n")
         i += 2
         # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
         if i is 6:
             break
 
 
-
+def display_data():
+    error = True
+    while error is True:
+        try:
+            display_information("19838652")
+            first_part = True
+            if first_part is True:
+                try:
+                    display_dota2_news("19838652")
+                    error = False
+                except url.HTTPError:
+                    print("HTTPError has occurred while downloading data xml data." + "\nTrying to reconnect.. \n")
+                    time.sleep(2)
+                else:
+                    None
+        except url.HTTPError:
+            print("HTTPError has occurred while downloading data xml data." + "\nTrying to reconnect.. \n")
+            time.sleep(2)
+        else:
+            None
