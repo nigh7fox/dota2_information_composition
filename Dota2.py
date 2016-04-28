@@ -16,30 +16,37 @@ class DotaData(object):
     def get_account_id(self):
         return self.account_id
 
-    def get_user_match_items(self, account_id):
+    def get_user_match_items(self, amount):
         """"
-        This function returns a list of all the account_id's, items_id's.
-        !!FUNCTION NEEDS WORK!!
+        This function returns a list of all item_id's per amount games.
         """
         item_ids = []
-        steam_xml_file = et.parse("hero_info.xml")
-        steam_xml_root = steam_xml_file.getroot()
-        for players in steam_xml_root:
-            for player in players:
-                    find_my_id = str(player.find("account_id").text)
-                    if find_my_id == str(self.account_id):
-                        item_ids.append(player.find("item_0").text)
-                        item_ids.append(player.find("item_1").text)
-                        item_ids.append(player.find("item_2").text)
-                        item_ids.append(player.find("item_3").text)
-                        item_ids.append(player.find("item_4").text)
-                        return item_ids
+        amount = (amount*2)
+        x = 0
+        match_data = self.get_match_data()
+        while True:
+            steam_xml_file = download_xml(4, match_data[x])
+            for players in steam_xml_file:
+                for player in players:
+                        find_my_id = str(player.find("account_id").text)
+                        if find_my_id == str(self.account_id):
+                            item_ids.append(player.find("item_0").text)
+                            item_ids.append(player.find("item_1").text)
+                            item_ids.append(player.find("item_2").text)
+                            item_ids.append(player.find("item_3").text)
+                            item_ids.append(player.find("item_4").text)
+                            item_ids.append(player.find("item_5").text)
+            x += 2
+            if x is amount:
+                break
+        return item_ids
 
     def get_item_name(self, item_id):
         """
         This function returns the chosen item name -> compares it with item_id
         !!NEEDS WORK!!
         """
+        self.pass_static()
         steam_xml_file = et.parse("item_info.xml")
         steam_xml_root = steam_xml_file.getroot()
         for items in steam_xml_root:
@@ -76,46 +83,48 @@ class DotaData(object):
                         player_side = "Dire"
 
         if player_side == "Radiant" and radiant_xml_result == "TRUE":
-            player_result = str("win").upper()
+            player_result = 1
         elif player_side == "Dire" and radiant_xml_result == "FALSE":
-            player_result = str("win").upper()
+            player_result = 1
         else:
-            player_result = str("loss").upper()
+            player_result = 0
         return player_result
 
-    def get_wins(self, account_id):
+    def get_wins(self, amount):
         """
         This method returns the amount of wins per 10 games of the given account_id.
         To increase the amount of games checked increase amount_of_games in modulo of 2.
         """
         answer = 0
         i = 0
-        amount_of_games = 20
+        amount = (amount*2)
         match_data = self.get_match_data()
-        while i is not amount_of_games:
+        while i is not amount:
             result = self.get_match_result(match_data[i], self.account_id)
-            if result == "WIN":
+            if result == 1:
                 answer += 1
             i += 2
         return answer
 
-    def get_user_hero_id(self, account_id):
+    def get_user_hero_id(self, amount):
         """
         This functions returns a list containing the ID of the hero that the given account_id user, has played.
         It fills up after completing all for loops, otherwise it will only remember the first input hero_id
         """
         # MAGIC
         steam_xml_file = download_xml(2, "")
-        #   steam_xml_parser = et.parse("mylog.xml")
         steam_xml_root = steam_xml_file
         steam_xml_matches = steam_xml_root.find('matches')
         user_match_data_list = []
-
+        x = 0
         for match in steam_xml_matches:
             for match_info in match:
                 for player in match_info:
                     if player.find("account_id").text == self.account_id:
                         user_match_data_list.append(player.find('hero_id').text)
+            x += 1
+            if x is amount:
+                break
         return user_match_data_list
 
     def get_hero_information(self, hero_id):
@@ -124,6 +133,7 @@ class DotaData(object):
         From the function get_user_id()
         """
         # MAGIC
+        self.pass_static()
         steam_xml_file = download_xml(1, "")
         #   steam_xml_parser = et.parse("herolog.xml")
 
@@ -141,6 +151,15 @@ class DotaData(object):
         for selected_hero in hero_list:
             return selected_hero
 
+    def get_hero_amount(self, hero_id, amount):
+        hero_found = 0
+        x = 0
+        hero_list = self.get_user_hero_id(amount)
+        for heroes in hero_list:
+            if int(heroes) is int(hero_id):
+                hero_found += 1
+        return hero_found
+
     def get_match_data(self):
         """
         This function returns the match_id and time in timestamp.
@@ -148,7 +167,6 @@ class DotaData(object):
         """
         # MAGIC
         steam_xml_file = download_xml(2, str(self.account_id))
-        #   steam_xml_parser = et.parse("mylog.xml")
 
         steam_xml_root = steam_xml_file
         steam_xml_matches = steam_xml_root.find('matches')
@@ -166,6 +184,7 @@ class DotaData(object):
         This function downloads the xml file and adds the chosen items into a list.
         It then returns this list with current dota2 news.
         """
+        self.pass_static()
         steam_xml_file = download_xml(3, "")
         news_list = []
 
@@ -176,72 +195,33 @@ class DotaData(object):
                 news_list.append(news_item.find("contents").text)
         return news_list
 
-    def display_dota2_news(self):
-        """
-        This function output's the news using the get_dota2_news list.
-        This is function is optional.
-        """
-        wins_amount = self.get_wins(self.account_id)
-        dota_news_list = self.get_dota2_news()
-        wins_total = 10
-        case_positive = "This user is on a winning streak he's won " + str(wins_amount) + " out of 10 games."
-        case_negative = "This user is on a losing streak he's won " + str(wins_amount) + " out of 10 games."
+    def last_game_time(self):
+        match_data = self.get_match_data()
+        time_converted = datetime.datetime.fromtimestamp(int(match_data[1])).strftime('%Y-%m-%d %H:%M:%S')
+        return time_converted
 
-        if wins_amount > (wins_total/2):
-            case = case_positive
-        else:
-            case = case_negative
-
-        print(case + "\n")
-        print("Also.. Here's some dota2 news!\n")
-        for news in dota_news_list:
-            print(news)
-
-    def display_information(self):
+    def get_last_games(self, amount):
         """
-        This function is used to merely display data.
-        The first half of the current total output.
         This will be changed / removed.
         """
         i = 0
+        amount = (amount*2)
         user_match_data_list = self.get_user_hero_id(self.account_id)
         match_data = self.get_match_data()
+        list_games = []
         for info in user_match_data_list:
             match_result = self.get_match_result(match_data[i], self.account_id)
             chosen_hero = self.get_hero_information(str(info))
-            print("ACCOUNT_ID INFORMATION: " + self.account_id)
-            print("MATCH ID: " + match_data[i] +
-                  "\nTIME PLAYED: " + datetime.datetime.fromtimestamp(int(match_data[i+1])).strftime('%Y-%m-%d %H:%M:%S') +
-                  "\nMATCH HERO: " + str(chosen_hero).upper())
-            print(match_result + "\n")
+            list_games.append(str(chosen_hero))
+            list_games.append(self.account_id)
+            list_games.append(match_data[i])
+            list_games.append(datetime.datetime.fromtimestamp(int(match_data[i + 1])).strftime('%Y-%m-%d %H:%M:%S'))
+            list_games.append(match_result)
             i += 2
             # modulo of 2 represent each game -> (i = 4) is 2 games, (i = 6) is 3 games, (i = 8) is 4 games and so on.
-            if i is 6:
+            if i is amount:
                 break
+        return list_games
 
-    def display_all_data(self):
-        error = True
-        first_part = True
-        reconnect_tries = 0
-        sleep_timer = 5
-        while error is True:
-            try:
-                self.display_information()
-                error = False
-                while first_part is True:
-                    try:
-                        self.display_dota2_news()
-                        first_part = False
-                        break
-                    except url.HTTPError:
-                        reconnect_tries += 1
-                        print("HTTPError has occurred while downloading data xml data." +
-                              "\nTrying to reconnect.." + "(" + str(reconnect_tries) + ")"  "\n")
-                        time.sleep(sleep_timer)
-            except url.HTTPError:
-                reconnect_tries += 1
-                print("HTTPError has occurred while downloading data xml data." +
-                      "\nTrying to reconnect.." + "(" + str(reconnect_tries) + ")"  "\n")
-                time.sleep(sleep_timer)
-            else:
-                None
+    def pass_static(self):
+        pass
