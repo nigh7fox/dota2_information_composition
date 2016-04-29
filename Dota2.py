@@ -4,8 +4,6 @@ This is dota2. All dota2 related functions are in here.
 import datetime
 from Download import download_xml as download_xml
 import xml.etree.ElementTree as et
-import time
-import urllib.request as url
 
 
 class DotaData(object):
@@ -64,9 +62,9 @@ class DotaData(object):
         for x in list_user_item_ids:
             print(str(self.get_item_name(x)).upper())
 
-    def get_match_result(self, match_id, account_id):
+    def get_match_result(self, match_id, side):
         """
-        Returns the given match, matched with the given account_id's wins in text. -> "win" or "loss"
+        Returns list of games results / sides. (radiant or dire)
         """
         steam_xml_file = download_xml(4, match_id)
         radiant_xml_result = str(steam_xml_file.find("radiant_win").text).upper()
@@ -82,29 +80,34 @@ class DotaData(object):
                     else:
                         player_side = "Dire"
 
-        if player_side == "Radiant" and radiant_xml_result == "TRUE":
-            player_result = 1
-        elif player_side == "Dire" and radiant_xml_result == "FALSE":
-            player_result = 1
-        else:
-            player_result = 0
-        return player_result
+                if player_side == "Radiant" and radiant_xml_result == "TRUE":
+                    player_result = 1
+                elif player_side == "Dire" and radiant_xml_result == "FALSE":
+                    player_result = 1
+                else:
+                    player_result = 0
 
-    def get_wins(self, amount):
+        if side == 0:
+            return player_result
+        elif side == 1:
+            return player_side
+        else:
+            return None
+
+    def list_results(self, amount, side):
         """
-        This method returns the amount of wins per 10 games of the given account_id.
-        To increase the amount of games checked increase amount_of_games in modulo of 2.
+        This functions is used to loop through the returned items from get_match_result and add them into a list.
+        We then return this list in the amount specified by the user.
         """
-        answer = 0
         i = 0
         amount = (amount*2)
         match_data = self.get_match_data()
+        result_list = []
         while i is not amount:
-            result = self.get_match_result(match_data[i], self.account_id)
-            if result == 1:
-                answer += 1
+            result = self.get_match_result(match_data[i], side)
+            result_list.append(result)
             i += 2
-        return answer
+        return result_list
 
     def get_user_hero_id(self, amount):
         """
@@ -151,7 +154,7 @@ class DotaData(object):
         for selected_hero in hero_list:
             return selected_hero
 
-    def get_hero_amount(self, hero_id, amount):
+    def list_hero_amount(self, hero_id, amount):
         hero_found = 0
         x = 0
         hero_list = self.get_user_hero_id(amount)
@@ -165,21 +168,19 @@ class DotaData(object):
         This function returns the match_id and time in timestamp.
         Converting of timestamp happens when outputting.
         """
-        # MAGIC
         steam_xml_file = download_xml(2, str(self.account_id))
 
         steam_xml_root = steam_xml_file
         steam_xml_matches = steam_xml_root.find('matches')
         match_data_list = []
 
-        #   i am so good.
         for match in steam_xml_matches:
             for m_id in match.findall('match_id'):
                 match_data_list.append(m_id.text)
                 match_data_list.append(match.find('start_time').text)
         return match_data_list
 
-    def get_dota2_news(self):
+    def list_dota2_news(self):
         """
         This function downloads the xml file and adds the chosen items into a list.
         It then returns this list with current dota2 news.
@@ -200,7 +201,17 @@ class DotaData(object):
         time_converted = datetime.datetime.fromtimestamp(int(match_data[1])).strftime('%Y-%m-%d %H:%M:%S')
         return time_converted
 
-    def get_last_games(self, amount):
+    def list_last_game_ids(self, amount):
+        amount = (amount*2)
+        id_list = []
+        match_data = self.get_match_data()
+        i = 0
+        while i < amount:
+            id_list.append(match_data[i])
+            i += 2
+        return id_list
+
+    def list_last_games(self, amount):
         """
         This will be changed / removed.
         """
